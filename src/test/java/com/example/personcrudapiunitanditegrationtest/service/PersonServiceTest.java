@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
@@ -37,9 +36,9 @@ public class PersonServiceTest {
     @Test
     void testFindById() throws ChangeSetPersister.NotFoundException {
         //Given
-        Person person =new Person(1l,"ehsan","shademani",27);
+        Person person =new Person(1L,"ehsan","shademani",27);
 
-        PersonDto dto = new PersonDto(1l,"ehsan",27,"shademani");
+        PersonDto dto = new PersonDto(1L,"ehsan",27,"shademani");
         //when
         when(personMapper.entityToDto(any(Person.class))).thenReturn(dto);
         Mockito.when(personRepository.findById(person.getId())).thenReturn(Optional.of(person));
@@ -54,10 +53,11 @@ public class PersonServiceTest {
     @Test
     void testDeleteById() {
         //Given
-        Person person =new Person(1l,"ehsan","shademani",27);
+        Long id = 1L;
+        Person person =new Person(id,"ehsan","shademani",27);
 
 
-        PersonDto personDto = new PersonDto(1l,"ehsan",27,"shademani");
+//        PersonDto personDto = new PersonDto(id,"ehsan",27,"shademani");
         //when
         Mockito.when(personRepository.findById(person.getId())).thenReturn(Optional.of(person));
         doNothing().when(personRepository).deleteById(any(Long.class));
@@ -70,8 +70,9 @@ public class PersonServiceTest {
     @Test
     void testCreate() {
         //Given
-        Person person = new Person(1l,"ehsan","shademani",27);
-        PersonDto dtoBase = new PersonDto(1l,"ehsan",27,"shademani");
+        Long id = 1L;
+        Person person = new Person(id,"ehsan","shademani",27);
+        PersonDto dtoBase = new PersonDto(id,"ehsan",27,"shademani");
         //when
         Mockito.when(personMapper.entityToDto(any(Person.class))).thenReturn(dtoBase);
         Mockito.when(personMapper.dtoToEntity(any(PersonDto.class))).thenReturn(person);
@@ -81,18 +82,18 @@ public class PersonServiceTest {
         assertNotNull(dtoBase);
         assertEquals("ehsan",dtoBase.getName());
         assertEquals("shademani",dtoBase.getLastName());
-//        verify(personRepository).save(person);
     }
 
     @Test
-    void testUpdate() throws ClassNotFoundException, ChangeSetPersister.NotFoundException {
+    void testUpdate() throws ClassNotFoundException {
         //Given
-        PersonDto dtoBase = new PersonDto(1l,"ehsan",27,"shademani");
-        Person person = new Person(1l,"ehsan","shademani",27);
+        Long id = 1L;
+        PersonDto dtoBase = new PersonDto(id,"ehsan",27,"shademani");
+        Person person = new Person(id,"ehsan","shademani",27);
         //when
         when(personMapper.entityToDto(any(Person.class))).thenReturn(dtoBase);
-        when(personRepository.findById(person.getId())).thenReturn(Optional.of(person));
         when(personRepository.save(person)).thenReturn(person);
+        when(personRepository.findById(person.getId())).thenReturn(Optional.of(person));
 
         //then
         PersonDto savePerson = personService.update(dtoBase.getId(),dtoBase);
@@ -102,27 +103,28 @@ public class PersonServiceTest {
         savePerson.setLastName(person.getLastName());
         personService.update(dtoBase.getId(),savePerson);
         assertEquals("ehsan update",savePerson.getName());
-//        verify(personRepository).save(any());
 
     }
 
     @Test
     void testFindAll() {
         //Given
+
         List<Person> people = new ArrayList<>();
         List<PersonDto> result = new ArrayList<>();
-        Person person1 = new Person(1l,"ehsan","Shademani",27);
-        Person person2 = new Person(2l,"parsa","Shademani",16);
+        Person person1 = new Person(1L,"ehsan","Shademani",27);
+        Person person2 = new Person(2L,"parsa","Shademani",16);
         people.add(person1);
         people.add(person2);
         PersonDto personDto = new PersonDto(1L,"ehsan",27,"Shademani");
-        PersonDto personDto1 = new PersonDto(2l,"parsa",16,"Shademani");
+        PersonDto personDto1 = new PersonDto(2L,"parsa",16,"Shademani");
         result.add(personDto);
         result.add(personDto1);
 
         //when
 
         when(personMapper.entityToDto(any(Person.class))).thenReturn(personDto);
+        Mockito.when(personService.findAll()).thenReturn(result);
         Mockito.when(personRepository.findAll()).thenReturn(people);
         //then
 
@@ -138,6 +140,18 @@ public class PersonServiceTest {
         Assertions.assertEquals(people.get(1).getAge(),result.get(1).getAge());
         Assertions.assertEquals(people.get(1).getLastName(),result.get(1).getLastName());
         Assertions.assertEquals(people.get(1).getName(),result.get(1).getName());
-//        verify(personRepository).findAll();
+    }
+
+    @Test
+    void testIfPersonIsNotPresentWithCurrentId() {
+        //Given
+        Long id = 1L;
+        PersonDto dtoBase = new PersonDto(id,"ehsan",27,"shademani");
+//        Person person = new Person(id,"ehsan","shademani",27);
+        //when
+        when(personRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        //then
+        assertThrows(RuntimeException.class,()->personService.update(id,dtoBase));
     }
 }

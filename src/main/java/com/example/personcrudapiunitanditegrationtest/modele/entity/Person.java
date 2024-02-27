@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Objects;
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

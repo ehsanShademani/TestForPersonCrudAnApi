@@ -1,14 +1,18 @@
 package com.example.personcrudapiunitanditegrationtest.modele.dto;
 
+import com.example.personcrudapiunitanditegrationtest.base.BaseDto;
+import jakarta.persistence.GeneratedValue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Objects;
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PersonDto {
+public class PersonDto implements BaseDto {
     private Long id;
     private String name;
     private Integer age;
