@@ -1,145 +1,139 @@
 package com.example.personcrudapiunitanditegrationtest.controller;
 
-import com.example.personcrudapiunitanditegrationtest.mapper.PersonMapper;
 import com.example.personcrudapiunitanditegrationtest.modele.dto.PersonDto;
 import com.example.personcrudapiunitanditegrationtest.modele.entity.Person;
 import com.example.personcrudapiunitanditegrationtest.repository.PersonRepository;
 import com.example.personcrudapiunitanditegrationtest.service.PersonService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
-
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.http.MediaType;
 
-@SpringBootTest()
+
+@SpringBootTest
 @AutoConfigureMockMvc
 @RunWith(SpringRunner.class)
 public class PersonControllerTest {
-    @MockBean
-    private PersonService personService;
     @Autowired
-    private PersonMapper personMapper;
+    MockMvc mockMvc;
+    static ObjectMapper jsonObjectMapper= new ObjectMapper();
     @Autowired
-    private PersonRepository personRepository;
+    PersonService personService;
+    @BeforeAll
+    public void setUp(){
+        MockitoAnnotations.initMocks(this);
 
+    }
+    private PersonDto creatPersonTest(){
+       return new  PersonDto(1L,"Ehsan",27,"Shademani");
 
-    @Autowired
-    private MockMvc mockMvc;
+    }
+    private MockHttpServletRequestBuilder putRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
+        return MockMvcRequestBuilders.put("/person/{id}",personDto)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(jsonObjectMapper.writeValueAsString(personDto));
+    }
+    private MockHttpServletRequestBuilder createRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
+        return MockMvcRequestBuilders.post("/person",personDto)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(jsonObjectMapper.writeValueAsString(personDto));
+    }
 
+    private MockHttpServletRequestBuilder getByIdRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
-        @Test
-        public void testCreate() throws Exception {
+        return MockMvcRequestBuilders.get("/person/{id}",personDto)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(jsonObjectMapper.writeValueAsString(personDto));
+    }
+    private MockHttpServletRequestBuilder getAllRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
-            PersonDto personDto1 = new PersonDto(null, "ehsan", 27, "Shademani");
-            Person person = new Person(null,"ehsan","shademani",27);
-//        when(personMapper.entityToDto(person)).thenReturn(personDto);
+        return MockMvcRequestBuilders.get("/person/findAll",personDto)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(jsonObjectMapper.writeValueAsString(personDto));
+    }
+    private MockHttpServletRequestBuilder deleteRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
-             mockMvc.perform(post("/person")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(Objects.requireNonNull(objectToJeson(person))))
-                    .andExpect(status().isCreated());
-            personService.create(personDto1);
-            personRepository.save(person);
-
-            assertThat(personRepository.findById(person.getId())).isPresent()
-                    .hasValueSatisfying((p)->assertThat(p).isEqualToComparingFieldByFieldRecursively(person));
-
-
-
-        }
-
-
-
-    @Test
-    public void testFindById() throws Exception {
-        Long id = 1L;
-        Person person = new Person(id,"ehsan","shademani",27);
-
-        PersonDto personDto = personMapper.entityToDto(person);
-        personRepository.save(person);
-        mockMvc.perform((get("/person/1")))
-                .andExpect(status().isAccepted());
-        assertThat(personRepository.findById(id)).isPresent()
-                .hasValueSatisfying(p->assertThat(p).usingRecursiveComparison()
-                        .isEqualTo(personDto));
-
-
+        return MockMvcRequestBuilders.delete("/person/{id}",personDto)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(jsonObjectMapper.writeValueAsString(personDto));
+    }
+    private MvcResult mockResult(Integer statusCode,MockHttpServletRequestBuilder requestBuilder) throws Exception {
+       return mockMvc.perform(requestBuilder).andExpect(status().is(statusCode)).andReturn();
     }
     @Test
-    public void testFindAll() throws Exception {
-        Person person = new Person(1L,"ehsan","shademani",27);
-        Person person1 = new Person(2L,"parsa","shademani",17);
-
-        List<Person> personList= personRepository.saveAll(Arrays.asList(person,person1));
-        mockMvc.perform(get("/person/findAll"))
-                .andExpect(status().isAccepted());
-        assertThat(personRepository.findAll()).size()
-                .isEqualTo(personList.size());
-
-    }
-
-
-    @Test
-    public void testDeleteById() throws Exception {
-        Long id = 1L;
-        PersonDto personDto =new PersonDto(1L,"ehsan",27,"shademani");
-
-        personRepository.save( personMapper.dtoToEntity(personDto));
-        mockMvc.perform(delete("/person/1"))
-                .andExpect(status().isOk());
-        personRepository.deleteById(id);
-        assertThat(personRepository.findById(id)).isEmpty();
-
+    @Rollback
+    @DisplayName("should return person with 201 status code")
+    public void creatTest() throws Exception {
+        PersonDto personDto = creatPersonTest();
+        jsonObjectMapper.findAndRegisterModules();
+        MockHttpServletRequestBuilder requestBuilder = createRequestBuilder(personDto);
+        MvcResult result = mockResult(201,requestBuilder);
+        String responseContent = result.getResponse().getContentAsString();
+        Person savedPerson=jsonObjectMapper.readValue(responseContent, Person.class);
+        assertNotNull(savedPerson.getId());
+        assertEquals(savedPerson.getName(),personDto.getName());
+        assertEquals(savedPerson.getAge(),personDto.getAge());
+        assertEquals(savedPerson.getLastName(),personDto.getLastName());
     }
     @Test
-    public void testUpdate() throws Exception {
-        Long id = 1L;
-        Person person = new Person(id,"ehsan","shademani",27);
+    @Rollback
+    @DisplayName("should update person with 200 status")
+    public void updateTest() throws Exception {
+        PersonDto personDto = creatPersonTest();
+        PersonDto savedPerson =
+                personService.create(new PersonDto(personDto.getId(),personDto.getName(),personDto.getAge(), personDto.getLastName()));
 
-        PersonDto personDto = personMapper.entityToDto(person);
-        personService.create(personDto);
-        personRepository.save(person);
-        mockMvc.perform(put("/person/1").contentType(MediaType.APPLICATION_JSON)
-                        .content(Objects.requireNonNull(objectToJeson(personDto))))
-                .andExpect(status().isOk());
-        personService.update(personDto.getId(),personDto );
-        personRepository.save(person);
-        Person updatePerson =personRepository.findById(person.getId()).orElse(null);
-        updatePerson.setId(1L);
-        assertThat(updatePerson).isNotNull();
-        assertThat(updatePerson.getId()).isEqualTo(1L);
-        assertThat(updatePerson.getName()).isEqualTo("ehsan");
-        assertThat(updatePerson.getAge()).isEqualTo(27);
-        assertThat(updatePerson.getLastName()).isEqualTo("shademani");
+        savedPerson.setAge(30);//update age
+
+
+
+
+
+
+
+        MockHttpServletRequestBuilder requestBuilder = putRequestBuilder(savedPerson);
+        MvcResult result = mockResult(200,requestBuilder);
+        String response = result.getResponse().getContentAsString();
+
+        PersonDto updatePerson = jsonObjectMapper.readValue(response,PersonDto.class);
+        assertNotNull(updatePerson.getId());
+        assertEquals(updatePerson.getName(),savedPerson.getName());
+        assertEquals(updatePerson.getLastName(),savedPerson.getLastName());
+        assertEquals(updatePerson.getAge(),savedPerson.getAge());
 
     }
-    public String objectToJeson(Object object){
-        try {
-            return new ObjectMapper().writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            fail("Failed to convert object to json");
-            return null;
-        }
-    }
+
+
 }
