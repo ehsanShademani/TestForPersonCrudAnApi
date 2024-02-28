@@ -43,8 +43,8 @@ public class PersonControllerTest {
     MockMvc mockMvc;
     static ObjectMapper jsonObjectMapper= new ObjectMapper();
     @Autowired
-    PersonService personService;
-    @BeforeAll
+    PersonController personController;
+    @BeforeEach
     public void setUp(){
         MockitoAnnotations.initMocks(this);
 
@@ -55,7 +55,7 @@ public class PersonControllerTest {
     }
     private MockHttpServletRequestBuilder putRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
-        return MockMvcRequestBuilders.put("/person/{id}",personDto)
+        return MockMvcRequestBuilders.put("/person/{id}",personDto.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(jsonObjectMapper.writeValueAsString(personDto));
@@ -84,7 +84,7 @@ public class PersonControllerTest {
     }
     private MockHttpServletRequestBuilder deleteRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
-        return MockMvcRequestBuilders.delete("/person/{id}",personDto)
+        return MockMvcRequestBuilders.delete("/person/{id}",personDto.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(jsonObjectMapper.writeValueAsString(personDto));
@@ -112,26 +112,26 @@ public class PersonControllerTest {
     @DisplayName("should update person with 200 status")
     public void updateTest() throws Exception {
         PersonDto personDto = creatPersonTest();
-        PersonDto savedPerson =
-                personService.create(new PersonDto(personDto.getId(),personDto.getName(),personDto.getAge(), personDto.getLastName()));
+        ResponseEntity<PersonDto> savedPerson =
+                personController.creat(new PersonDto(personDto.getId(),personDto.getName(),personDto.getAge(), personDto.getLastName()));
 
-        savedPerson.setAge(30);//update age
-
-
-
+        PersonDto savedPersonUpdate=savedPerson.getBody();//update age
+        savedPersonUpdate.setAge(30);
 
 
 
 
-        MockHttpServletRequestBuilder requestBuilder = putRequestBuilder(savedPerson);
+
+
+        MockHttpServletRequestBuilder requestBuilder = putRequestBuilder(savedPersonUpdate);
         MvcResult result = mockResult(200,requestBuilder);
         String response = result.getResponse().getContentAsString();
 
         PersonDto updatePerson = jsonObjectMapper.readValue(response,PersonDto.class);
         assertNotNull(updatePerson.getId());
-        assertEquals(updatePerson.getName(),savedPerson.getName());
-        assertEquals(updatePerson.getLastName(),savedPerson.getLastName());
-        assertEquals(updatePerson.getAge(),savedPerson.getAge());
+        assertEquals(updatePerson.getName(),savedPersonUpdate.getName());
+        assertEquals(updatePerson.getLastName(),savedPersonUpdate.getLastName());
+        assertEquals(updatePerson.getAge(),savedPersonUpdate.getAge());
 
     }
 
