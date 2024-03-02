@@ -1,6 +1,7 @@
 package com.example.personcrudapiunitanditegrationtest.modele.dto;
 
 import com.example.personcrudapiunitanditegrationtest.base.BaseDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.GeneratedValue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,7 +15,9 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PersonDto implements BaseDto {
     private Long id;
+    @JsonProperty
     private String name;
+    @JsonProperty
     private Integer age;
     private String lastName;
 

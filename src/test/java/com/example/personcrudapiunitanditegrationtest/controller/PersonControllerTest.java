@@ -47,24 +47,26 @@ import java.util.List;
 public class PersonControllerTest {
     @Autowired
     MockMvc mockMvc;
-    static ObjectMapper jsonObjectMapper= new ObjectMapper();
+    static ObjectMapper jsonObjectMapper = new ObjectMapper();
     @Autowired
     PersonController personController;
 
-    private PersonDto creatPersonTest(){
-       return new  PersonDto(1L,"Ehsan",27,"Shademani");
+    private PersonDto creatPersonTest() {
+        return new PersonDto(1L, "Ehsan", 27, "Shademani");
 
     }
+
     private MockHttpServletRequestBuilder putRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
-        return MockMvcRequestBuilders.put("/person/{id}",personDto.getId())
+        return MockMvcRequestBuilders.put("/person/{id}", personDto.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(jsonObjectMapper.writeValueAsString(personDto));
     }
+
     private MockHttpServletRequestBuilder createRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
-        return MockMvcRequestBuilders.post("/person",personDto)
+        return MockMvcRequestBuilders.post("/person", personDto)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(jsonObjectMapper.writeValueAsString(personDto));
@@ -72,11 +74,12 @@ public class PersonControllerTest {
 
     private MockHttpServletRequestBuilder getByIdRequestBuilder(Long id) throws JsonProcessingException {
 
-        return MockMvcRequestBuilders.get("/person/{id}",id)
+        return MockMvcRequestBuilders.get("/person/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(jsonObjectMapper.writeValueAsString(id));
     }
+
     private MockHttpServletRequestBuilder getAllRequestBuilder() throws JsonProcessingException {
 
         return MockMvcRequestBuilders.get("/person/findAll")
@@ -84,96 +87,116 @@ public class PersonControllerTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .content(jsonObjectMapper.writeValueAsString(any(PersonDto.class)));
     }
+
     private MockHttpServletRequestBuilder deleteRequestBuilder(Long id) throws JsonProcessingException {
 
-        return MockMvcRequestBuilders.delete("/person/{id}",id);
+        return MockMvcRequestBuilders.delete("/person/{id}", id);
 //                .contentType(MediaType.APPLICATION_JSON)
 //                .accept(MediaType.APPLICATION_JSON);
 //                .content(jsonObjectMapper.writeValueAsString(personDto));
     }
-    private MvcResult mockResult(Integer statusCode,MockHttpServletRequestBuilder requestBuilder) throws Exception {
-       return mockMvc.perform(requestBuilder).andExpect(status().is(statusCode)).andReturn();
+
+    private MvcResult mockResult(Integer statusCode, MockHttpServletRequestBuilder requestBuilder) throws Exception {
+        return mockMvc.perform(requestBuilder).andExpect(status().is(statusCode)).andReturn();
     }
+
     @Test
     @Rollback
     public void creatTest() throws Exception {
         PersonDto personDto = creatPersonTest();
+        personDto.setId(null);
         jsonObjectMapper.findAndRegisterModules();
         MockHttpServletRequestBuilder requestBuilder = createRequestBuilder(personDto);
-        MvcResult result = mockResult(201,requestBuilder);
+        MvcResult result = mockResult(201, requestBuilder);
         String responseContent = result.getResponse().getContentAsString();
-        Person savedPerson=jsonObjectMapper.readValue(responseContent, Person.class);
+        Person savedPerson = jsonObjectMapper.readValue(responseContent, Person.class);
         assertNotNull(savedPerson.getId());
-        assertEquals(savedPerson.getName(),personDto.getName());
-        assertEquals(savedPerson.getAge(),personDto.getAge());
-        assertEquals(savedPerson.getLastName(),personDto.getLastName());
+        assertEquals(savedPerson.getName(), personDto.getName());
+        assertEquals(savedPerson.getAge(), personDto.getAge());
+        assertEquals(savedPerson.getLastName(), personDto.getLastName());
     }
+
+
     @Test
     @Rollback
     public void updateTest() throws Exception {
         PersonDto personDto = creatPersonTest();
         ResponseEntity<PersonDto> savedPerson =
-                personController.creat(new PersonDto(personDto.getId(),personDto.getName(),personDto.getAge(), personDto.getLastName()));
+                personController.creat(new PersonDto(personDto.getId(), personDto.getName(), personDto.getAge(), personDto.getLastName()));
 
-        PersonDto savedPersonUpdate=savedPerson.getBody();//update age
+        PersonDto savedPersonUpdate = savedPerson.getBody();//update age
         assert savedPersonUpdate != null;
         savedPersonUpdate.setAge(30);
-
-
-
-
-
-
         MockHttpServletRequestBuilder requestBuilder = putRequestBuilder(savedPersonUpdate);
-        MvcResult result = mockResult(200,requestBuilder);
+        MvcResult result = mockResult(200, requestBuilder);
         String response = result.getResponse().getContentAsString();
 
-        PersonDto updatePerson = jsonObjectMapper.readValue(response,PersonDto.class);
+        PersonDto updatePerson = jsonObjectMapper.readValue(response, PersonDto.class);
         assertNotNull(updatePerson.getId());
-        assertEquals(updatePerson.getName(),savedPersonUpdate.getName());
-        assertEquals(updatePerson.getLastName(),savedPersonUpdate.getLastName());
-        assertEquals(updatePerson.getAge(),savedPersonUpdate.getAge());
+        assertEquals(updatePerson.getName(), savedPersonUpdate.getName());
+        assertEquals(updatePerson.getLastName(), savedPersonUpdate.getLastName());
+        assertEquals(updatePerson.getAge(), savedPersonUpdate.getAge());
 
     }
+
+    @Test
+    @Rollback
+    public void ifPersonWithThatIdWasNotExistYouCantUpdate() throws Exception {
+        PersonDto personDto = creatPersonTest();
+        Long invalidId = 870789L;
+        MockHttpServletRequestBuilder requestBuilderGet = getByIdRequestBuilder(invalidId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON);
+        MvcResult Getresult = mockMvc.perform(requestBuilderGet).andExpect(status().isNotFound())
+                .andReturn();
+
+        MockHttpServletRequestBuilder requestBuilder = putRequestBuilder(personDto)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON);
+        MvcResult result = mockMvc.perform(requestBuilder).andExpect(status().isNotFound())
+                .andReturn();
+    }
+
     @Test
     @Rollback
     public void getByIdTest() throws Exception {
         PersonDto personDto = creatPersonTest();
         ResponseEntity<PersonDto> savedPerson = personController.creat
-                (new PersonDto(personDto.getId(), personDto.getName(), personDto.getAge(),personDto.getLastName()));
+                (new PersonDto(personDto.getId(), personDto.getName(), personDto.getAge(), personDto.getLastName()));
         PersonDto foundSavedPerson = savedPerson.getBody();
         MockHttpServletRequestBuilder requestBuilder = getByIdRequestBuilder(foundSavedPerson.getId());
-        MvcResult result =mockResult(202,requestBuilder);
+        MvcResult result = mockResult(202, requestBuilder);
         String response = result.getResponse().getContentAsString();
-        PersonDto foundPerson = jsonObjectMapper.readValue(response,PersonDto.class);
+        PersonDto foundPerson = jsonObjectMapper.readValue(response, PersonDto.class);
         assertNotNull(foundPerson.getId());
-        assertEquals(foundPerson.getName(),foundSavedPerson.getName());
-        assertEquals(foundPerson.getLastName(),foundSavedPerson.getLastName());
-        assertEquals(foundPerson.getAge(),foundSavedPerson.getAge());
+        assertEquals(foundPerson.getName(), foundSavedPerson.getName());
+        assertEquals(foundPerson.getLastName(), foundSavedPerson.getLastName());
+        assertEquals(foundPerson.getAge(), foundSavedPerson.getAge());
 
 
     }
+
     @Test
-    @Rollback
-    public void ifPersonWithThatIdWasntExistYouCantGet() throws Exception {
+    public void ifPersonWithThatIdWasNotExistYouCantGet() throws Exception {
         Long unValidId = 33224342234L;
-        MockHttpServletRequestBuilder requestBuilder =getByIdRequestBuilder(unValidId)
+        MockHttpServletRequestBuilder requestBuilder = getByIdRequestBuilder(unValidId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON);
-        MvcResult result=mockMvc.perform(requestBuilder).andExpect(status().isNotFound())
+        MvcResult result = mockMvc.perform(requestBuilder).andExpect(status().isNotFound())
                 .andReturn();
     }
+
     @Test
     @Rollback
     public void getAllPerson() throws Exception {
-    PersonDto personDto = creatPersonTest();
+        PersonDto personDto = creatPersonTest();
         ResponseEntity<PersonDto> savedPerson = personController.creat
-                (new PersonDto(personDto.getId(), personDto.getName(), personDto.getAge(),personDto.getLastName()));
+                (new PersonDto(personDto.getId(), personDto.getName(), personDto.getAge(), personDto.getLastName()));
         PersonDto foundSavedPerson = savedPerson.getBody();
         List<PersonDto> personDtoList = new ArrayList<>();
         personDtoList.add(foundSavedPerson);
         MockHttpServletRequestBuilder requestBuilder = getAllRequestBuilder();
-        MvcResult result = mockResult(202,requestBuilder);
+        MvcResult result = mockResult(202, requestBuilder);
         String response = result.getResponse().getContentAsString();
         List<PersonDto> foundPersonDtos = jsonObjectMapper.readValue(response, new TypeReference<List<PersonDto>>() {
             @Override
@@ -182,40 +205,41 @@ public class PersonControllerTest {
             }
         });
         assertFalse(foundPersonDtos.isEmpty());
-        assertTrue(foundPersonDtos.stream().anyMatch(p->p.getId().equals(savedPerson.getBody().getId())));
+        assertTrue(foundPersonDtos.stream().anyMatch(p -> p.getId().equals(savedPerson.getBody().getId())));
 
     }
+
     @Test
-    @Rollback
-    public void ifAnyPersonWasntExistYouCantGetAll() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder =getAllRequestBuilder()
+    public void ifAnyPersonWasNotExistYouCantGetAll() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = getAllRequestBuilder()
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON);
-        MvcResult result=mockMvc.perform(requestBuilder).andExpect(status().isNotFound())
+        MvcResult result = mockMvc.perform(requestBuilder).andExpect(status().isNotFound())
                 .andReturn();
     }
+
     @Test
     @Rollback
-    public  void deletePersonTest() throws Exception {
+    public void deletePersonTest() throws Exception {
         PersonDto personDto = creatPersonTest();
         ResponseEntity<PersonDto> savedPerson = personController.creat
-                (new PersonDto(personDto.getId(), personDto.getName(), personDto.getAge(),personDto.getLastName()));
+                (new PersonDto(personDto.getId(), personDto.getName(), personDto.getAge(), personDto.getLastName()));
         PersonDto foundSavedPerson = savedPerson.getBody();
         MockHttpServletRequestBuilder requestBuilder = deleteRequestBuilder(foundSavedPerson.getId());
-        MvcResult result = mockResult(204,requestBuilder);
+        MvcResult result = mockResult(204, requestBuilder);
         MockHttpServletRequestBuilder getByIdRequestBuilder = getByIdRequestBuilder(foundSavedPerson.getId());
-        MvcResult getResult = mockResult(404,getByIdRequestBuilder);
+        MvcResult getResult = mockResult(404, getByIdRequestBuilder);
 
 
     }
+
     @Test
-    @Rollback
-    public void ifPersonIdWasntExistYouCantDelete() throws Exception {
+    public void ifPersonIdWasNotExistYouCantDelete() throws Exception {
         Long notValidId = (long) Math.random();
-        MockHttpServletRequestBuilder requestBuilder =deleteRequestBuilder(notValidId)
+        MockHttpServletRequestBuilder requestBuilder = deleteRequestBuilder(notValidId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON);
-        MvcResult result=mockMvc.perform(requestBuilder).andExpect(status().isNotFound())
+        MvcResult result = mockMvc.perform(requestBuilder).andExpect(status().isNotFound())
                 .andReturn();
     }
 }

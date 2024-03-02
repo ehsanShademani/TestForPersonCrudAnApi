@@ -46,12 +46,17 @@ public class PersonController {
 
     @PostMapping()
     public ResponseEntity creat(@RequestBody PersonDto personDto) {
-        return ResponseEntity.status(201).body(personService.create(personDto));
+        var result = personService.create(personDto);
+        if (result.getAge()==null||result.getName().isEmpty()) return ResponseEntity.badRequest().build();
+        else
+        return ResponseEntity.status(201).body(result);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity update(@PathVariable Long id, @RequestBody PersonDto personDto) throws NoSuchElementException {
-        return ResponseEntity.status(200).body(personService.update(id, personDto));
+        var result = personService.update(id,personDto);
+        if (result==null)return ResponseEntity.notFound().build();
+        return ResponseEntity.status(200).body(result);
     }
 
     @DeleteMapping("/{id}")

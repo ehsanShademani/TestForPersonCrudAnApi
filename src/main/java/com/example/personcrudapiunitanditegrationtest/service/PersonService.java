@@ -32,8 +32,12 @@ public class PersonService  {
 
 
     public PersonDto create(PersonDto personDto) {
+
         Person entity = personMapper.dtoToEntity(personDto);
-        return personMapper.entityToDto(personRepository.save(entity));
+        if (personDto.getName().isEmpty()||personDto.getAge()==null)
+            return null;
+        else
+            return personMapper.entityToDto(personRepository.save(entity));
     }
 
 
@@ -46,7 +50,7 @@ public class PersonService  {
             existingPerson.setLastName(personDto.getLastName());
             Person person =personRepository.save(existingPerson);
             return personMapper.entityToDto(person);
-        }else throw new NoSuchElementException("person not found with id : "+ id);
+        }else return null;
     }
     public void deleteById(Long id) throws NoSuchElementException {
 
