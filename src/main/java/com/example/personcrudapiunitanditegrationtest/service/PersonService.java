@@ -7,6 +7,7 @@ import com.example.personcrudapiunitanditegrationtest.repository.PersonRepositor
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 @Service
@@ -18,13 +19,14 @@ public class PersonService  {
         this.personRepository = personRepository;
         this.personMapper=personMapper;
     }
-    public PersonDto findById(Long id) throws RuntimeException {
-        Person person = personRepository.findById(id).orElseThrow(RuntimeException::new);
-        return personMapper.entityToDto(person);
+    public PersonDto findById(Long id) throws NoSuchElementException {
+       Optional<Person> person = personRepository.findById(id);
+        return person.map(personMapper::entityToDto).orElse(null);
     }
 
 
     public List<PersonDto> findAll() {
+        if (personRepository.findAll().isEmpty())return null;
         return personRepository.findAll().stream().map(personMapper::entityToDto).collect(Collectors.toList());
     }
 
@@ -35,7 +37,7 @@ public class PersonService  {
     }
 
 
-    public PersonDto update(Long id,PersonDto personDto) throws RuntimeException {
+    public PersonDto update(Long id,PersonDto personDto) throws NoSuchElementException {
         Optional<Person> person1 = personRepository.findById(id);
         if (person1.isPresent()) {
             Person existingPerson = person1.get();
@@ -44,11 +46,11 @@ public class PersonService  {
             existingPerson.setLastName(personDto.getLastName());
             Person person =personRepository.save(existingPerson);
             return personMapper.entityToDto(person);
-        }else throw new RuntimeException("person not found with id : "+ id);
+        }else throw new NoSuchElementException("person not found with id : "+ id);
     }
-    public void deleteById(Long id) throws RuntimeException {
+    public void deleteById(Long id) throws NoSuchElementException {
 
-        personRepository.findById(id).orElseThrow(()->new RuntimeException());
+        personRepository.findById(id).orElseThrow(()->new NoSuchElementException("Person not found with this id : "+ id));
 
 
         personRepository.deleteById(id);
