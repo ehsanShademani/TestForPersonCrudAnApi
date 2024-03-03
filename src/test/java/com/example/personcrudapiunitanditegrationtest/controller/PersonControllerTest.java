@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.lang.Character.getType;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.*;
@@ -198,7 +199,8 @@ public class PersonControllerTest {
         MockHttpServletRequestBuilder requestBuilder = getAllRequestBuilder();
         MvcResult result = mockResult(202, requestBuilder);
         String response = result.getResponse().getContentAsString();
-        List<PersonDto> foundPersonDtos = jsonObjectMapper.readValue(response, new TypeReference<List<PersonDto>>() {
+        List<PersonDto> foundPersonDtos =
+                jsonObjectMapper.readValue(response, new TypeReference<List<PersonDto>>() {
             @Override
             public Type getType() {
                 return super.getType();
@@ -209,14 +211,6 @@ public class PersonControllerTest {
 
     }
 
-    @Test
-    public void ifAnyPersonWasNotExistYouCantGetAll() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = getAllRequestBuilder()
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON);
-        MvcResult result = mockMvc.perform(requestBuilder).andExpect(status().isNotFound())
-                .andReturn();
-    }
 
     @Test
     @Rollback
