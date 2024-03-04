@@ -67,7 +67,7 @@ public class PersonControllerTest {
 
     private MockHttpServletRequestBuilder createRequestBuilder(PersonDto personDto) throws JsonProcessingException {
 
-        return MockMvcRequestBuilders.post("/person", personDto)
+        return MockMvcRequestBuilders.post("/person/insert", personDto)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(jsonObjectMapper.writeValueAsString(personDto));
@@ -210,18 +210,18 @@ public class PersonControllerTest {
         assertTrue(foundPersonDtos.stream().anyMatch(p -> p.getId().equals(savedPerson.getBody().getId())));
 
     }
-//    public void testIfAntPersonWasntExistReturnNothing() throws Exception {
-//        MockHttpServletRequestBuilder requestBuilder = getAllRequestBuilder();
-//        MvcResult result = mockResult(200,requestBuilder);
-//        String response = result.getResponse().getContentAsString();
-//        List<PersonDto> foundPersonDtos = jsonObjectMapper.readValue(response, new TypeReference<List<PersonDto>>() {
-//            @Override
-//            public Type getType() {
-//                return super.getType();
-//            }
-//        });
-//        assertTrue(foundPersonDtos.isEmpty());
-//    }
+    @Test
+    public void testIfAntPersonWasntExistReturnNothing() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = getAllRequestBuilder();
+        MvcResult result = mockResult(404,requestBuilder);
+        String response = result.getResponse().getContentAsString();
+        if (response==null||response.trim().isEmpty()){
+            assertTrue(true);
+            return;
+        }
+        List<PersonDto> foundPersonDtos = jsonObjectMapper.readValue(response, new TypeReference<List<PersonDto>>(){});
+        assertTrue(foundPersonDtos.isEmpty());
+    }
 
 
     @Test
