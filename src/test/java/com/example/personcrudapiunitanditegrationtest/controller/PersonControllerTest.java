@@ -210,6 +210,18 @@ public class PersonControllerTest {
         assertTrue(foundPersonDtos.stream().anyMatch(p -> p.getId().equals(savedPerson.getBody().getId())));
 
     }
+//    public void testIfAntPersonWasntExistReturnNothing() throws Exception {
+//        MockHttpServletRequestBuilder requestBuilder = getAllRequestBuilder();
+//        MvcResult result = mockResult(200,requestBuilder);
+//        String response = result.getResponse().getContentAsString();
+//        List<PersonDto> foundPersonDtos = jsonObjectMapper.readValue(response, new TypeReference<List<PersonDto>>() {
+//            @Override
+//            public Type getType() {
+//                return super.getType();
+//            }
+//        });
+//        assertTrue(foundPersonDtos.isEmpty());
+//    }
 
 
     @Test

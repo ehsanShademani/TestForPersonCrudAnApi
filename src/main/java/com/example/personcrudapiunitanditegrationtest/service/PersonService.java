@@ -4,7 +4,9 @@ import com.example.personcrudapiunitanditegrationtest.mapper.PersonMapper;
 import com.example.personcrudapiunitanditegrationtest.modele.dto.PersonDto;
 import com.example.personcrudapiunitanditegrationtest.modele.entity.Person;
 import com.example.personcrudapiunitanditegrationtest.repository.PersonRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -14,7 +16,7 @@ import java.util.stream.Collectors;
 public class PersonService  {
     private final PersonRepository personRepository;
     private final PersonMapper personMapper;
-
+    @Autowired
     public PersonService(PersonRepository personRepository,PersonMapper personMapper) {
         this.personRepository = personRepository;
         this.personMapper=personMapper;
@@ -27,7 +29,7 @@ public class PersonService  {
 
     public List<PersonDto> findAll() {
         if (personRepository.findAll().isEmpty())return null;
-        return personRepository.findAll().stream().map(personMapper::entityToDto).collect(Collectors.toList());
+        else return personRepository.findAll().stream().map(personMapper::entityToDto).collect(Collectors.toList());
     }
 
 

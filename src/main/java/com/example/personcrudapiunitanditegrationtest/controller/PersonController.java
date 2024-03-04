@@ -3,9 +3,12 @@ package com.example.personcrudapiunitanditegrationtest.controller;
 import com.example.personcrudapiunitanditegrationtest.modele.dto.PersonDto;
 import com.example.personcrudapiunitanditegrationtest.service.PersonService;
 import lombok.AllArgsConstructor;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.swing.text.html.Option;
@@ -13,16 +16,34 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-@RequestMapping("/person")
+@RequestMapping(value = "/person")
 @RestController
-
 public class PersonController {
     private final PersonService personService;
 
-    @Autowired
     public PersonController(PersonService personService) {
         this.personService = personService;
     }
+
+    @PostMapping(value = "/insert")
+    public ResponseEntity<PersonDto> creat(@RequestBody PersonDto personDto) {
+
+        PersonDto result = personService.create(personDto);
+        if (result.getAge() == null || result.getName().isEmpty()) return ResponseEntity.badRequest().build();
+        else
+            return ResponseEntity.status(201).body(result);
+//        if (personDto.getName() == null || personDto.getName().isEmpty() || personDto.getAge() == null) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//
+//        PersonDto result = personService.create(personDto);
+//        if (result == null) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PersonDto> getById(@PathVariable Long id) {
 
@@ -44,17 +65,10 @@ public class PersonController {
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(result);
     }
 
-    @PostMapping()
-    public ResponseEntity creat(@RequestBody PersonDto personDto) {
-        var result = personService.create(personDto);
-        if (result.getAge()==null||result.getName().isEmpty()) return ResponseEntity.badRequest().build();
-        else
-        return ResponseEntity.status(201).body(result);
-    }
 
     @PutMapping("/{id}")
-    public ResponseEntity update(@PathVariable Long id, @RequestBody PersonDto personDto) throws NoSuchElementException {
-        var result = personService.update(id,personDto);
+    public ResponseEntity<PersonDto> update(@PathVariable("id") Long id, @RequestBody PersonDto personDto) throws NoSuchElementException {
+        PersonDto result = personService.update(id,personDto);
         if (result==null)return ResponseEntity.notFound().build();
         return ResponseEntity.status(200).body(result);
     }
