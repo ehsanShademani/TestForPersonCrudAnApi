@@ -153,7 +153,7 @@ public class PersonServiceTest {
         //Given
         Long id = 2L;
         PersonDto dtoBase = new PersonDto(id,"ehsan",27,"shademani");
-//        Person person = new Person(id,"ehsan","shademani",27);
+
         when(personRepository.findById(anyLong())).thenReturn(Optional.empty());
         //when
         PersonDto updatePersonDto = personService.update(id,dtoBase);
