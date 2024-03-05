@@ -32,16 +32,7 @@ public class PersonController {
         if (result.getAge() == null || result.getName().isEmpty()) return ResponseEntity.badRequest().build();
         else
             return ResponseEntity.status(201).body(result);
-//        if (personDto.getName() == null || personDto.getName().isEmpty() || personDto.getAge() == null) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//
-//        PersonDto result = personService.create(personDto);
-//        if (result == null) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//
-//        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+
     }
 
     @GetMapping("/{id}")

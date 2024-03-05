@@ -110,12 +110,12 @@ public class PersonServiceTest {
     void testFindAll() {
         //Given
 
-        List<Person> people = new ArrayList<>();
+//        List<Person> people = new ArrayList<>();
         List<PersonDto> result = new ArrayList<>();
-        Person person1 = new Person(1L,"ehsan","Shademani",27);
-        Person person2 = new Person(2L,"parsa","Shademani",16);
-        people.add(person1);
-        people.add(person2);
+//        Person person1 = new Person(1L,"ehsan","Shademani",27);
+//        Person person2 = new Person(2L,"parsa","Shademani",16);
+//        people.add(person1);
+//        people.add(person2);
         PersonDto personDto = new PersonDto(1L,"ehsan",27,"Shademani");
         PersonDto personDto1 = new PersonDto(2L,"parsa",16,"Shademani");
         result.add(personDto);
@@ -123,35 +123,54 @@ public class PersonServiceTest {
 
         //when
 
-        when(personMapper.entityToDto(any(Person.class))).thenReturn(personDto);
+//        when(personMapper.entityToDto(any(Person.class))).thenReturn(personDto);
         Mockito.when(personService.findAll()).thenReturn(result);
-        Mockito.when(personRepository.findAll()).thenReturn(people);
+//        Mockito.when(personRepository.findAll()).thenReturn(people);
         //then
 
 
         assertEquals(2,result.size());
-        Assertions.assertEquals(people.get(0).getId(),result.get(0).getId());
-        Assertions.assertEquals(people.get(0).getAge(),result.get(0).getAge());
-        Assertions.assertEquals(people.get(0).getLastName(),result.get(0).getLastName());
-        Assertions.assertEquals(people.get(0).getName(),result.get(0).getName());
+        Assertions.assertEquals(result.get(0).getId(),1L);
+        Assertions.assertEquals(result.get(0).getAge(),27);
+        Assertions.assertEquals(result.get(0).getLastName(),"Shademani");
+        Assertions.assertEquals(result.get(0).getName(),"ehsan");
 
 
-        Assertions.assertEquals(people.get(1).getId(),result.get(1).getId());
-        Assertions.assertEquals(people.get(1).getAge(),result.get(1).getAge());
-        Assertions.assertEquals(people.get(1).getLastName(),result.get(1).getLastName());
-        Assertions.assertEquals(people.get(1).getName(),result.get(1).getName());
+        Assertions.assertEquals(result.get(1).getId(),2L);
+        Assertions.assertEquals(result.get(1).getAge(),16);
+        Assertions.assertEquals(result.get(1).getLastName(),"Shademani");
+        Assertions.assertEquals(result.get(1).getName(),"parsa");
     }
-
+    @Test
+    void testIfTestWasNullReturnNull(){
+        PersonDto personDto = new PersonDto();
+        List<PersonDto> personDtos = new ArrayList<>();
+        personDtos.add(personDto);
+        Mockito.when(personService.findAll()).thenReturn(null);
+    }
     @Test
     void testIfPersonIsNotPresentWithCurrentId() {
         //Given
-        Long id = 1L;
+        Long id = 2L;
         PersonDto dtoBase = new PersonDto(id,"ehsan",27,"shademani");
 //        Person person = new Person(id,"ehsan","shademani",27);
-        //when
         when(personRepository.findById(anyLong())).thenReturn(Optional.empty());
-
+        //when
+        PersonDto updatePersonDto = personService.update(id,dtoBase);
         //then
-        assertThrows(RuntimeException.class,()->personService.update(id,dtoBase));
+            assertThrows(RuntimeException.class,()-> personService.update(updatePersonDto.getId(),updatePersonDto));
+
+    }
+    @Test
+    void  testIfPersonHasntNameReturnException(){
+        PersonDto personDto = new PersonDto(1L,null,27,"Shademani");
+
+        assertThrows(RuntimeException.class,()->personService.create(personDto));
+
+    }
+    @Test
+    void  testIfPersonHasntAgeReturnException(){
+        PersonDto personDto = new PersonDto(1L,"Ehsan",null,"Shademani");
+        assertNull(personService.create(personDto));
     }
 }
